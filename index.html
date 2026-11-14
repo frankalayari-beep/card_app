@@ -860,3 +860,59 @@ SP1,16/11/2026,Arsenal,Real Madrid,,,Craig Pawson,,,,,,,2.40,3.30,2.90`;
   setTimeout(() => loadFromDataFolder('ALL'), 500);
 })();
 </script>
+<!-- قابلیت نصب اپلیکیشن روی موبایل (PWA) -->
+<script>
+(function() {
+  const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="42" fill="#0f172a"/><rect x="52" y="28" width="88" height="136" rx="14" fill="#eab308" stroke="#fef08a" stroke-width="6"/></svg>`;
+  const iconUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(iconSvg);
+
+  const metaTags = [
+    { name: 'theme-color', content: '#0b1120' },
+    { name: 'mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+    { name: 'apple-mobile-web-app-title', content: 'کارت زرد' }
+  ];
+  metaTags.forEach(m => {
+    const el = document.createElement('meta');
+    el.name = m.name; el.content = m.content;
+    document.head.appendChild(el);
+  });
+
+  const touchIcon = document.createElement('link');
+  touchIcon.rel = 'apple-touch-icon'; touchIcon.href = iconUrl;
+  document.head.appendChild(touchIcon);
+
+  const manifest = {
+    name: 'سامانه علمی پیش‌بینی کارت زرد فوتبال',
+    short_name: 'کارت زرد',
+    start_url: window.location.href,
+    display: 'standalone',
+    background_color: '#0b1120',
+    theme_color: '#eab308',
+    icons: [{ src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' }]
+  };
+  const manifestLink = document.createElement('link');
+  manifestLink.rel = 'manifest';
+  manifestLink.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+  document.head.appendChild(manifestLink);
+
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
+
+  const headerBtnGroup = document.querySelector('header .flex.flex-wrap');
+  if (headerBtnGroup) {
+    const btn = document.createElement('button');
+    btn.className = 'px-3.5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-extrabold transition shadow-lg';
+    btn.innerText = '📲 نصب اپلیکیشن روی گوشی';
+    btn.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+      } else {
+        alert('برای نصب آیکون برنامه روی صفحه اصلی گوشی:\n\n• در اندروید (کروم): روی سه نقطه بالای مرورگر بزنید و گزینه Add to Home screen (افزودن به صفحه اصلی) را انتخاب کنید.\n\n• در آیفون (سافاری): روی دکمه Share پایین صفحه بزنید و گزینه Add to Home Screen را انتخاب کنید.');
+      }
+    };
+    headerBtnGroup.prepend(btn);
+  }
+})();
+</script>
