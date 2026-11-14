@@ -916,3 +916,152 @@ SP1,16/11/2026,Arsenal,Real Madrid,,,Craig Pawson,,,,,,,2.40,3.30,2.90`;
   }
 })();
 </script>
+<!-- نسخه مستقیم خواندن از حافظه گیت‌هاب + تنظیم خودکار اهرم‌های شبیه‌ساز -->
+<script>
+(function() {
+  const oldPanel = document.getElementById('ghSyncStatus')?.closest('section');
+  if (oldPanel) oldPanel.remove();
+
+  const container = document.querySelector('.max-w-7xl, .max-w-6xl');
+  if (!container) return;
+
+  const user = window.location.hostname.split('.')[0];
+  const repo = window.location.pathname.split('/').filter(Boolean)[0] || '';
+  const rawBase = (user && repo && window.location.hostname.includes('github.io'))
+    ? `https://raw.githubusercontent.com/${user}/${repo}/main/data`
+    : './data';
+
+  const panel = document.createElement('section');
+  panel.className = 'card-glass rounded-2xl p-5 mb-6 space-y-4';
+  panel.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-3">
+      <h2 class="text-sm md:text-base font-bold text-emerald-400">جدول خودکار لیگ‌ها (متصل به ربات گیت‌هاب)</h2>
+      <span id="ghSyncTime" class="text-xs text-slate-400">در حال اتصال مستقیم به مخزن...</span>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button onclick="loadDirectData('ALL')" class="px-3 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">همه ۵ لیگ معتبر</button>
+      <button onclick="loadDirectData('SP1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">لالیگا (SP1)</button>
+      <button onclick="loadDirectData('E0')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">انگلیس (E0)</button>
+      <button onclick="loadDirectData('I1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">ایتالیا (I1)</button>
+      <button onclick="loadDirectData('D1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">آلمان (D1)</button>
+      <button onclick="loadDirectData('F1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">فرانسه (F1)</button>
+      <button onclick="loadDirectData('P1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">پرتغال (P1)</button>
+      <button onclick="loadDirectData('T1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">ترکیه (T1)</button>
+      <button onclick="loadDirectData('G1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">یونان (G1)</button>
+    </div>
+    <div id="ghSyncStatus" class="text-xs text-yellow-400 font-semibold"></div>
+    <div id="ghAutoTable" class="overflow-x-auto"></div>
+  `;
+  container.insertBefore(panel, container.children[1] || container.firstChild);
+
+  fetch(`${rawBase}/last_updated.txt?t=${Date.now()}`)
+    .then(r => r.ok ? r.text() : '')
+    .then(t => { if (t) document.getElementById('ghSyncTime').innerText = 'آخرین آپدیت ربات: ' + t.trim(); });
+
+  window.autoMatchesList = [];
+
+  window.applyToSliders = function(idx) {
+    const m = window.autoMatchesList[idx];
+    if (!m) return;
+    const hInput = document.getElementById('homeAgg');
+    const aInput = document.getElementById('awayAgg');
+    const rInput = document.getElementById('refStrictness');
+    const cInput = document.getElementById('matchCloseness');
+
+    if (hInput) hInput.value = Math.min(Math.max(m.hAgg, 0.6), 1.6).toFixed(2);
+    if (aInput) aInput.value = Math.min(Math.max(m.aAgg, 0.6), 1.6).toFixed(2);
+    if (rInput) {
+      if (rInput.tagName === 'SELECT') {
+        rInput.value = m.rStr >= 1.25 ? "1.32" : m.rStr >= 1.08 ? "1.18" : m.rStr >= 0.92 ? "1.00" : m.rStr >= 0.78 ? "0.84" : "0.72";
+      } else {
+        rInput.value = Math.min(Math.max(m.rStr, 0.65), 1.45).toFixed(2);
+      }
+    }
+    if (cInput) cInput.value = m.closeMult;
+    if (typeof calculateModel === 'function') calculateModel();
+    if (hInput) hInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  window.loadDirectData = async function(code) {
+    const status = document.getElementById('ghSyncStatus');
+    status.innerText = 'در حال دریافت مستقیم فایل‌های CSV از مخزن گیت‌هاب...';
+    const list = code === 'ALL' ? ['SP1', 'E0', 'I1', 'D1', 'F1'] : [code];
+    let lines = [], header = '';
+
+    for (const lg of list) {
+      try {
+        let res = await fetch(`${rawBase}/${lg}.csv?t=${Date.now()}`);
+        if (!res.ok) res = await fetch(`./data/${lg}.csv?t=${Date.now()}`);
+        if (res.ok) {
+          const rows = (await res.text()).trim().split(/\r?\n/);
+          if (!header && rows.length) header = rows[0];
+          lines.push(...rows.slice(1));
+        }
+      } catch (e) {}
+    }
+
+    try {
+      let fix = await fetch(`${rawBase}/fixtures.csv?t=${Date.now()}`);
+      if (!fix.ok) fix = await fetch(`./data/fixtures.csv?t=${Date.now()}`);
+      if (fix.ok) {
+        (await fix.text()).trim().split(/\r?\n/).slice(1).forEach(r => {
+          if (list.includes(r.split(',')[0])) lines.push(r);
+        });
+      }
+    } catch (e) {}
+
+    if (!header || !lines.length) {
+      status.innerText = 'فایل‌های CSV در پوشه data یافت نشدند. مطمئن شوید در تب Actions ربات تیک سبز خورده است.';
+      return;
+    }
+
+    const cols = header.split(',').map(c => c.trim());
+    const idxH = cols.indexOf('HomeTeam'), idxA = cols.indexOf('AwayTeam'), idxRef = cols.indexOf('Referee');
+    const idxHY = cols.indexOf('HY'), idxAY = cols.indexOf('AY');
+    const idxOddH = cols.indexOf('B365H'), idxOddA = cols.indexOf('B365A');
+    let played = [], upcoming = [], teams = {}, refs = {}, totalY = 0;
+
+    lines.forEach(l => {
+      const v = l.split(',');
+      const h = v[idxH], a = v[idxA], rf = v[idxRef] || 'میانگین لیگ';
+      const hy = parseFloat(v[idxHY]), ay = parseFloat(v[idxAY]);
+      const oddH = parseFloat(v[idxOddH]), oddA = parseFloat(v[idxOddA]);
+      let closeMult = "1.00";
+      if (!isNaN(oddH) && !isNaN(oddA) && oddH > 1 && oddA > 1) {
+        const diff = Math.abs((1 / oddH) - (1 / oddA));
+        closeMult = diff <= 0.16 ? "1.15" : diff >= 0.42 ? "0.82" : "1.00";
+      }
+      if (!h || !a) return;
+      if (!isNaN(hy) && !isNaN(ay)) {
+        played.push({ h, a, rf, y: hy + ay, closeMult });
+        totalY += (hy + ay);
+        teams[h] = (teams[h] || { g:0, c:0 }); teams[h].g++; teams[h].c += hy;
+        teams[a] = (teams[a] || { g:0, c:0 }); teams[a].g++; teams[a].c += ay;
+        refs[rf] = (refs[rf] || { g:0, c:0 }); refs[rf].g++; refs[rf].c += (hy + ay);
+      } else {
+        upcoming.push({ h, a, rf, y: null, closeMult });
+      }
+    });
+
+    const avg = played.length ? (totalY / played.length) : 4.16;
+    const target = upcoming.length ? upcoming.slice(0, 20) : played.slice(-15).reverse();
+    status.innerText = `آمار ${played.length} بازی فصل تحلیل شد | روی «تنظیم اهرم‌ها» بزنید تا مقادیر بازی وارد شبیه‌ساز پایین شود:`;
+
+    window.autoMatchesList = [];
+    let html = `<table class="w-full text-right text-xs border border-slate-800 rounded-xl mt-2"><thead class="bg-slate-900 text-slate-300"><tr><th class="p-2.5">مسابقه</th><th class="p-2.5">داور</th><th class="p-2.5 text-yellow-400">امید ریاضی</th><th class="p-2.5">بالای ۳.۵</th><th class="p-2.5">بالای ۴.۵</th><th class="p-2.5">نتیجه</th><th class="p-2.5 text-center">شبیه‌ساز</th></tr></thead><tbody class="divide-y divide-slate-800">`;
+    target.forEach((m, i) => {
+      const hAgg = teams[m.h] ? ((teams[m.h].c + 6) / (teams[m.h].g + 3)) / (avg / 2) : 1;
+      const aAgg = teams[m.a] ? ((teams[m.a].c + 6) / (teams[m.a].g + 3)) / (avg / 2) : 1;
+      const rStr = refs[m.rf] ? ((refs[m.rf].c + 16) / (refs[m.rf].g + 4)) / avg : 1;
+      const lam = avg * ((0.48 * hAgg) + (0.52 * aAgg * 1.12)) * rStr * parseFloat(m.closeMult);
+      const p35 = (1 - (poissonCDF(3, lam))) * 100;
+      const p45 = (1 - (poissonCDF(4, lam))) * 100;
+      window.autoMatchesList.push({ hAgg, aAgg, rStr, closeMult: m.closeMult });
+      html += `<tr><td class="p-2.5 font-bold text-white">${m.h} - ${m.a}</td><td class="p-2.5 text-slate-300">${m.rf}</td><td class="p-2.5 font-extrabold text-yellow-400">${lam.toFixed(2)}</td><td class="p-2.5">${p35.toFixed(1)}%</td><td class="p-2.5 font-bold text-yellow-300">${p45.toFixed(1)}%</td><td class="p-2.5">${m.y !== null ? m.y + ' کارت' : 'پیش‌رو'}</td><td class="p-2.5 text-center"><button onclick="applyToSliders(${i})" class="px-2 py-1 rounded bg-yellow-500 text-slate-950 font-bold">تنظیم اهرم‌ها</button></td></tr>`;
+    });
+    document.getElementById('ghAutoTable').innerHTML = html + `</tbody></table>`;
+  };
+
+  setTimeout(() => loadDirectData('ALL'), 400);
+})();
+</script>
