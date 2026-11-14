@@ -748,3 +748,115 @@ SP1,16/11/2026,Arsenal,Real Madrid,,,Craig Pawson,,,,,,,2.40,3.30,2.90`;
   </script>
 </body>
 </html>
+<!-- اتصال خودکار به پوشه data گیت‌هاب -->
+<script>
+(function() {
+  const container = document.querySelector('.max-w-7xl, .max-w-6xl');
+  if (!container) return;
+
+  const panel = document.createElement('section');
+  panel.className = 'card-glass rounded-2xl p-5 mb-6 space-y-4';
+  panel.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-3">
+      <h2 class="text-sm md:text-base font-bold text-emerald-400">دریافت خودکار آمار هفتگی از پوشه data گیت‌هاب</h2>
+      <span id="ghSyncTime" class="text-xs text-slate-400">در حال بررسی آخرین آپدیت ربات...</span>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button onclick="loadFromDataFolder('ALL')" class="px-3 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">همه ۵ لیگ معتبر + بازی‌های هفته</button>
+      <button onclick="loadFromDataFolder('SP1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">لالیگا (SP1)</button>
+      <button onclick="loadFromDataFolder('E0')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">انگلیس (E0)</button>
+      <button onclick="loadFromDataFolder('I1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">ایتالیا (I1)</button>
+      <button onclick="loadFromDataFolder('D1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">آلمان (D1)</button>
+      <button onclick="loadFromDataFolder('F1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">فرانسه (F1)</button>
+      <button onclick="loadFromDataFolder('P1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">پرتغال (P1)</button>
+      <button onclick="loadFromDataFolder('T1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">ترکیه (T1)</button>
+      <button onclick="loadFromDataFolder('G1')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs border border-slate-700">یونان (G1)</button>
+    </div>
+    <div id="ghSyncStatus" class="text-xs text-yellow-400 font-semibold"></div>
+    <div id="ghAutoTable" class="overflow-x-auto"></div>
+  `;
+  container.insertBefore(panel, container.children[1] || container.firstChild);
+
+  fetch('./data/last_updated.txt?t=' + Date.now())
+    .then(r => r.ok ? r.text() : '')
+    .then(t => { if (t) document.getElementById('ghSyncTime').innerText = 'آخرین آپدیت ربات: ' + t.trim(); });
+
+  window.loadFromDataFolder = async function(code) {
+    const status = document.getElementById('ghSyncStatus');
+    status.innerText = 'در حال دریافت و تحلیل فایل‌های CSV از پوشه data...';
+    const list = code === 'ALL' ? ['SP1', 'E0', 'I1', 'D1', 'F1'] : [code];
+    let lines = [], header = '';
+
+    for (const lg of list) {
+      try {
+        const res = await fetch(`./data/${lg}.csv?t=${Date.now()}`);
+        if (res.ok) {
+          const rows = (await res.text()).trim().split(/\r?\n/);
+          if (!header && rows.length) header = rows[0];
+          lines.push(...rows.slice(1));
+        }
+      } catch (e) {}
+    }
+
+    try {
+      const fix = await fetch(`./data/fixtures.csv?t=${Date.now()}`);
+      if (fix.ok) {
+        (await fix.text()).trim().split(/\r?\n/).slice(1).forEach(r => {
+          if (list.includes(r.split(',')[0])) lines.push(r);
+        });
+      }
+    } catch (e) {}
+
+    if (!header || !lines.length) {
+      status.innerText = 'فایل‌های پوشه data هنوز روی Pages منتشر نشده‌اند (۱ دقیقه صبر کرده و صفحه را رفرش کنید).';
+      return;
+    }
+
+    const fullCSV = header + '\n' + lines.join('\n');
+    if (typeof processFootballDataCSV === 'function') {
+      processFootballDataCSV(fullCSV);
+      status.innerText = `تحلیل خودکار ${lines.length} مسابقه از پوشه data انجام شد.`;
+      return;
+    }
+
+    const cols = header.split(',').map(c => c.trim());
+    const idxH = cols.indexOf('HomeTeam'), idxA = cols.indexOf('AwayTeam'), idxRef = cols.indexOf('Referee');
+    const idxHY = cols.indexOf('HY'), idxAY = cols.indexOf('AY');
+    let played = [], upcoming = [], teams = {}, refs = {}, totalY = 0;
+
+    lines.forEach(l => {
+      const v = l.split(',');
+      const h = v[idxH], a = v[idxA], rf = v[idxRef] || 'میانگین لیگ';
+      const hy = parseFloat(v[idxHY]), ay = parseFloat(v[idxAY]);
+      if (!h || !a) return;
+      if (!isNaN(hy) && !isNaN(ay)) {
+        played.push({ h, a, rf, y: hy + ay });
+        totalY += (hy + ay);
+        teams[h] = (teams[h] || { g:0, c:0 }); teams[h].g++; teams[h].c += hy;
+        teams[a] = (teams[a] || { g:0, c:0 }); teams[a].g++; teams[a].c += ay;
+        refs[rf] = (refs[rf] || { g:0, c:0 }); refs[rf].g++; refs[rf].c += (hy + ay);
+      } else {
+        upcoming.push({ h, a, rf, y: null });
+      }
+    });
+
+    const avg = played.length ? (totalY / played.length) : 4.16;
+    const target = upcoming.length ? upcoming.slice(0, 15) : played.slice(-12).reverse();
+    status.innerText = `آمار ${played.length} بازی فصل تحلیل شد | میانگین کارت زرد: ${avg.toFixed(2)}`;
+
+    let html = `<table class="w-full text-right text-xs border border-slate-800 rounded-xl mt-2"><thead class="bg-slate-900 text-slate-300"><tr><th class="p-2.5">مسابقه</th><th class="p-2.5">داور</th><th class="p-2.5 text-yellow-400">امید ریاضی کارت</th><th class="p-2.5">بالای ۳.۵ کارت</th><th class="p-2.5">بالای ۴.۵ کارت</th><th class="p-2.5">وضعیت</th></tr></thead><tbody class="divide-y divide-slate-800">`;
+    target.forEach(m => {
+      const hAgg = teams[m.h] ? ((teams[m.h].c + 6) / (teams[m.h].g + 3)) / (avg / 2) : 1;
+      const aAgg = teams[m.a] ? ((teams[m.a].c + 6) / (teams[m.a].g + 3)) / (avg / 2) : 1;
+      const rStr = refs[m.rf] ? ((refs[m.rf].c + 16) / (refs[m.rf].g + 4)) / avg : 1;
+      const lam = avg * ((0.48 * hAgg) + (0.52 * aAgg * 1.12)) * rStr;
+      const p35 = (1 - (poissonCDF(3, lam))) * 100;
+      const p45 = (1 - (poissonCDF(4, lam))) * 100;
+      html += `<tr><td class="p-2.5 font-bold text-white">${m.h} - ${m.a}</td><td class="p-2.5 text-slate-300">${m.rf}</td><td class="p-2.5 font-extrabold text-yellow-400">${lam.toFixed(2)}</td><td class="p-2.5">${p35.toFixed(1)}%</td><td class="p-2.5 font-bold">${p45.toFixed(1)}%</td><td class="p-2.5">${m.y !== null ? m.y + ' کارت' : 'پیش‌رو'}</td></tr>`;
+    });
+    document.getElementById('ghAutoTable').innerHTML = html + `</tbody></table>`;
+  };
+
+  setTimeout(() => loadFromDataFolder('ALL'), 500);
+})();
+</script>
