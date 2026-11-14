@@ -1,0 +1,33 @@
+name: Auto-Update Football CSVs
+
+on:
+  schedule:
+    - cron: '0 6 * * 2'
+    - cron: '0 12 * * 5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch CSVs from Football-Data
+        run: |
+          mkdir -p data
+          for LG in E0 SP1 I1 D1 F1 N1 P1 T1 G1; do
+            curl -s -f -A "Mozilla/5.0" "https://www.football-data.co.uk/mmz4281/2526/${LG}.csv" -o "data/${LG}.csv" || true
+          done
+          curl -s -f -A "Mozilla/5.0" "https://www.football-data.co.uk/fixtures.csv" -o "data/fixtures.csv" || true
+          date -u +"%Y-%m-%d %H:%M UTC" > data/last_updated.txt
+
+      - name: Save to Repository
+        run: |
+          git config --local user.email "bot@github.com"
+          git config --local user.name "GitHub Bot"
+          git add data/
+          git diff --staged --quiet || git commit -m "Auto-update CSV data"
+          git push
