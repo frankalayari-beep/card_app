@@ -775,7 +775,11 @@ F1,10/2025,Marseille,Lille,Clement Turpin,14,15,3,3,2.30,3.10`;
       a.click();
     }
 
-    window.onload = () => fetchRepoLeague('ALL');
+    window.onload = () => {
+      document.querySelector('button[onclick*="Previewing"]')?.remove();
+      fetchRepoLeague('ALL');
+      triggerAdGate('Loading CardIQ Pro Match Analytics...');
+    };
   </script>
 </body>
 </html>
