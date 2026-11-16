@@ -1,0 +1,28 @@
+{
+  "id": "/card_app/",
+  "name": "سامانه علمی پیش‌بینی کارت زرد فوتبال",
+  "short_name": "کارت زرد",
+  "description": "تحلیل آماری و پیش‌بینی کارت زرد فوتبال بر پایه مدل رگرسیون پواسون",
+  "start_url": "/card_app/index.html",
+  "scope": "/card_app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1120",
+  "theme_color": "#eab308",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/soccer-yellow-card.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/soccer-yellow-card.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
