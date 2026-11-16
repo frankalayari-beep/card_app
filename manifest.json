@@ -1,29 +1,29 @@
 {
-  "id": "https://frankalayari-beep.github.io/card_app/",
+  "id": "/card_app/",
   "name": "Football Yellow Card Predictor",
   "short_name": "CardApp",
   "description": "Scientific football yellow card predictor based on Poisson regression and empirical referee data.",
-  "start_url": "https://frankalayari-beep.github.io/card_app/index.html",
-  "scope": "https://frankalayari-beep.github.io/card_app/",
+  "start_url": "/card_app/index.html",
+  "scope": "/card_app/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0b1120",
   "theme_color": "#eab308",
-  "lang": "fa",
+  "lang": "en",
   "dir": "rtl",
   "categories": ["sports", "utilities"],
   "icons": [
     {
-      "src": "https://img.icons8.com/color/192/soccer-yellow-card.png",
-      "sizes": "192x192",
+      "src": "https://cdn-icons-png.flaticon.com/512/1165/1165187.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://img.icons8.com/color/512/soccer-yellow-card.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/1165/1165187.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }
