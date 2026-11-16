@@ -1,4 +1,4 @@
-name: Build BETCARD APK & PlayStore AAB
+name: Build BET CARD APK & PlayStore AAB
 
 on:
   workflow_dispatch:
@@ -47,10 +47,10 @@ jobs:
           '
           fi
 
-      - name: Build Signed BETCARD APK & AAB
+      - name: Build Signed BET CARD APK & AAB
         run: |
           npm install -g cordova
-          cordova create app com.betcard.app "BETCARD"
+          cordova create app com.betcard.app "BET CARD"
           cp index.html app/www/index.html
           cp icon.png app/icon.png
 
@@ -58,7 +58,7 @@ jobs:
           sed -i 's/<\/widget>/<icon src="icon.png" \/><allow-navigation href="*"\/><access origin="*"\/><preference name="Orientation" value="portrait"\/><\/widget>/' config.xml
           cordova platform add android@13.0.0
 
-          keytool -genkeypair -v -keystore key.keystore -alias betcard -keyalg RSA -keysize 2048 -validity 10000 -storepass BetCard2026 -keypass BetCard2026 -dname "CN=BETCARD, O=BETCARD, C=GB"
+          keytool -genkeypair -v -keystore key.keystore -alias betcard -keyalg RSA -keysize 2048 -validity 10000 -storepass BetCard2026 -keypass BetCard2026 -dname "CN=BET CARD, O=BET CARD, C=GB"
 
           cat << 'EOF' > build-apk.json
           {
@@ -91,14 +91,14 @@ jobs:
           cordova build android --release --buildConfig=build-apk.json
           cordova build android --release --buildConfig=build-aab.json
 
-          cp platforms/android/app/build/outputs/apk/release/app-release.apk ../BETCARD.apk
-          cp platforms/android/app/build/outputs/bundle/release/app-release.aab ../BETCARD-PlayStore.aab
+          cp platforms/android/app/build/outputs/apk/release/app-release.apk ../BET-CARD.apk
+          cp platforms/android/app/build/outputs/bundle/release/app-release.aab ../BET-CARD-PlayStore.aab
 
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: "BETCARD Android App (v1.0.${{ github.run_number }})"
+          name: "BET CARD Android App (v1.0.${{ github.run_number }})"
           files: |
-            BETCARD.apk
-            BETCARD-PlayStore.aab
+            BET-CARD.apk
+            BET-CARD-PlayStore.aab
