@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#090d16">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>CardIQ Pro | Football Yellow Card Predictor</title>
+  <title>BET CARD | Football Disciplinary Predictor</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -22,12 +22,12 @@
 </head>
 <body class="min-h-screen p-3 md:p-6 pb-12">
 
-  <!-- 15-SECOND MANDATORY IN-APP INTERSTITIAL AD MODAL -->
+  <!-- 15-SECOND IN-APP INTERSTITIAL AD MODAL -->
   <div id="adModal" class="fixed inset-0 z-50 hidden bg-slate-950/95 backdrop-blur-md flex flex-col">
     <div class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
       <div class="flex items-center gap-2">
         <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 text-[11px] font-bold uppercase tracking-wider">Sponsored Ad</span>
-        <span id="adReasonText" class="text-xs text-slate-400 hidden sm:inline">Loading CardIQ Pro Match Analytics...</span>
+        <span id="adReasonText" class="text-xs text-slate-400 hidden sm:inline">Loading BET CARD Match Analytics...</span>
       </div>
       <div class="flex items-center gap-3">
         <div id="adTimerBadge" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-amber-400">
@@ -54,18 +54,18 @@
   <!-- MAIN APPLICATION CONTAINER -->
   <div class="max-w-7xl mx-auto space-y-5">
 
-    <!-- Header (Optional Ad Button Removed) -->
+    <!-- Header -->
     <header class="glass-panel rounded-2xl p-4 md:p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
       <div class="flex items-start gap-3.5">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg shrink-0">
-          🟨
+        <div class="w-11 h-14 rounded-lg bg-yellow-400 border-2 border-yellow-200 flex items-center justify-center text-slate-950 font-black text-xs tracking-tighter shadow-lg shrink-0">
+          BET
         </div>
         <div>
           <div class="inline-flex flex-wrap items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold mb-1">
             <span>LIVE POISSON ENGINE</span>
             <span id="lastSyncBadge" class="text-slate-400">| Syncing Repo...</span>
           </div>
-          <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">CardIQ Pro: Football Disciplinary Predictor</h1>
+          <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">BET CARD: Football Disciplinary Predictor</h1>
           <p class="text-slate-400 text-xs mt-0.5">Empirical GLM model based on Dawson (2007), Buraimo (2010), Boyko (2007), Lago-Peñas (2012) & Kempe (2014)</p>
         </div>
       </div>
@@ -764,14 +764,14 @@ F1,10/2025,Marseille,Lille,Clement Turpin,14,15,3,3,2.30,3.10`;
       });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-      a.download = 'cardiq_weekly_predictions.csv';
+      a.download = 'betcard_weekly_predictions.csv';
       a.click();
     }
 
-    // Mandatory 15s Ad Gate on Startup + Background Data Sync
+    // Mandatory 15s Ad Gate on Startup
     window.onload = () => {
       fetchRepoLeague('ALL');
-      triggerAdGate('Loading CardIQ Pro Match Analytics...');
+      triggerAdGate('Loading BET CARD Match Analytics...');
     };
   </script>
 </body>
