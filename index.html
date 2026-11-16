@@ -22,12 +22,12 @@
 </head>
 <body class="min-h-screen p-3 md:p-6 pb-12">
 
-  <!-- 15-SECOND IN-APP INTERSTITIAL AD MODAL -->
+  <!-- 15-SECOND MANDATORY IN-APP INTERSTITIAL AD MODAL -->
   <div id="adModal" class="fixed inset-0 z-50 hidden bg-slate-950/95 backdrop-blur-md flex flex-col">
     <div class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
       <div class="flex items-center gap-2">
         <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 text-[11px] font-bold uppercase tracking-wider">Sponsored Ad</span>
-        <span id="adReasonText" class="text-xs text-slate-400 hidden sm:inline">Unlocking Pro Econometric Analytics...</span>
+        <span id="adReasonText" class="text-xs text-slate-400 hidden sm:inline">Loading CardIQ Pro Match Analytics...</span>
       </div>
       <div class="flex items-center gap-3">
         <div id="adTimerBadge" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-amber-400">
@@ -54,7 +54,7 @@
   <!-- MAIN APPLICATION CONTAINER -->
   <div class="max-w-7xl mx-auto space-y-5">
 
-    <!-- Header -->
+    <!-- Header (Optional Ad Button Removed) -->
     <header class="glass-panel rounded-2xl p-4 md:p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
       <div class="flex items-start gap-3.5">
         <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg shrink-0">
@@ -71,9 +71,6 @@
       </div>
 
       <div class="flex flex-wrap gap-2 w-full lg:w-auto">
-        <button onclick="triggerAdGate('Previewing 15s Sponsor Ad')" class="px-3.5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-extrabold transition">
-          ▶ Watch Sponsor Ad
-        </button>
         <div class="relative overflow-hidden inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold cursor-pointer shadow-lg">
           <span>📂 Upload CSV</span>
           <input type="file" id="csvFileInput" multiple onchange="handleMobileFiles(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
@@ -350,11 +347,7 @@
   </div>
 
   <script>
-    // =========================================================================
-    // YOUR ACTIVE ADSTERRA DIRECT LINK:
-    // =========================================================================
     const ADSTERRA_DIRECT_LINK = "https://asiafilm.org/4/052064ca4ffd0916d363a8d4ca962a64";
-
     const REPO_RAW = "https://raw.githubusercontent.com/frankalayari-beep/card_app/main/data";
     let db = { avg: 4.16, foulsAvg: 22.8, divAvg: {}, teams: {}, refs: {}, list: [] };
     let adTimerInterval = null;
@@ -775,20 +768,8 @@ F1,10/2025,Marseille,Lille,Clement Turpin,14,15,3,3,2.30,3.10`;
       a.click();
     }
 
+    // Mandatory 15s Ad Gate on Startup + Background Data Sync
     window.onload = () => {
-      document.title = 'BETCARD | Football Disciplinary Predictor';
-      const logoBox = document.querySelector('header .w-12.h-12');
-      if (logoBox) {
-        logoBox.className = 'w-11 h-14 rounded-lg bg-yellow-400 border-2 border-yellow-200 flex items-center justify-center text-slate-950 font-black text-xs tracking-tighter shadow-lg shrink-0';
-        logoBox.innerText = 'BET';
-      }
-      const h1 = document.querySelector('header h1');
-      if (h1) h1.innerText = 'BETCARD: Football Disciplinary Predictor';
-      document.querySelector('button[onclick*="Previewing"], button[onclick*="Watch Sponsor Ad"]')?.remove();
-      fetchRepoLeague('ALL');
-      triggerAdGate('Loading BETCARD Match Analytics...');
-    };
-      document.querySelector('button[onclick*="Previewing"]')?.remove();
       fetchRepoLeague('ALL');
       triggerAdGate('Loading CardIQ Pro Match Analytics...');
     };
