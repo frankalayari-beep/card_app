@@ -776,6 +776,18 @@ F1,10/2025,Marseille,Lille,Clement Turpin,14,15,3,3,2.30,3.10`;
     }
 
     window.onload = () => {
+      document.title = 'BETCARD | Football Disciplinary Predictor';
+      const logoBox = document.querySelector('header .w-12.h-12');
+      if (logoBox) {
+        logoBox.className = 'w-11 h-14 rounded-lg bg-yellow-400 border-2 border-yellow-200 flex items-center justify-center text-slate-950 font-black text-xs tracking-tighter shadow-lg shrink-0';
+        logoBox.innerText = 'BET';
+      }
+      const h1 = document.querySelector('header h1');
+      if (h1) h1.innerText = 'BETCARD: Football Disciplinary Predictor';
+      document.querySelector('button[onclick*="Previewing"], button[onclick*="Watch Sponsor Ad"]')?.remove();
+      fetchRepoLeague('ALL');
+      triggerAdGate('Loading BETCARD Match Analytics...');
+    };
       document.querySelector('button[onclick*="Previewing"]')?.remove();
       fetchRepoLeague('ALL');
       triggerAdGate('Loading CardIQ Pro Match Analytics...');
