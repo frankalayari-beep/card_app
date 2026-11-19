@@ -1,7 +1,466 @@
-    // ================= SMART 3-LAYER BUNDLE LOADER (RATE-LIMIT SAFE) =================
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>BET CARD | Football Yellow Card Analytics</title>
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070b12;
+      --surface: #111827;
+      --surface-2: #172133;
+      --gold: #f59e0b;
+      --gold-light: #fbbf24;
+      --emerald: #10b981;
+      --red: #ef4444;
+      --blue: #38bdf8;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: #1f2d44;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 40px; overflow-x: hidden; }
+
+    /* Header */
+    .app-header {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(7, 11, 18, 0.94); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border); padding: 12px 14px 10px;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .brand { display: flex; align-items: center; gap: 8px; direction: ltr; }
+    .brand-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, #f59e0b, #b45309);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+    }
+    .brand-text { font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; color: #fff; }
+    .brand-text span { color: var(--gold-light); }
+
+    .header-controls { display: flex; align-items: center; gap: 6px; }
+    .lang-switch {
+      display: flex; align-items: center; gap: 3px;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 3px; border-radius: 10px; height: 38px;
+    }
+    .flag-btn {
+      width: 32px; height: 30px; border-radius: 7px; border: 1.5px solid transparent;
+      background: transparent; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0.45; transition: all 0.2s ease; padding: 2px;
+    }
+    .flag-btn.active {
+      opacity: 1; border-color: var(--gold-light);
+      background: rgba(245, 158, 11, 0.16);
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
+    }
+    .flag-svg { width: 23px; height: 15px; border-radius: 2px; display: block; }
+
+    .icon-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--gold-light);
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .icon-btn:active { transform: scale(0.94); border-color: var(--gold-light); }
+    .icon-btn.spinning svg { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Status Bar */
+    .status-bar {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 7px 10px; font-size: 0.72rem; color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); margin-inline-end: 5px; box-shadow: 0 0 8px var(--emerald); }
+    .status-live { color: #e2e8f0; font-weight: 700; display: flex; align-items: center; }
+
+    /* League Chips */
+    .league-strip {
+      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;
+      scrollbar-width: none; -ms-overflow-style: none;
+    }
+    .league-strip::-webkit-scrollbar { display: none; }
+    .league-btn {
+      flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); padding: 6px 11px; border-radius: 9px;
+      font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease;
+    }
+    .league-btn.active {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(180, 83, 9, 0.2));
+      border-color: var(--gold-light); color: var(--gold-light);
+    }
+
+    /* Main Container */
+    .container { max-width: 760px; margin: 0 auto; padding: 12px 14px; }
+
+    /* Stats Summary Row */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .kpi-card {
+      background: linear-gradient(180deg, var(--surface) 0%, #0c121e 100%);
+      border: 1px solid var(--border); border-radius: 12px; padding: 10px 8px; text-align: center;
+    }
+    .kpi-val { font-size: 1.25rem; font-weight: 900; color: var(--gold-light); line-height: 1.2; }
+    .kpi-val.green { color: var(--emerald); }
+    .kpi-val.blue { color: var(--blue); }
+    .kpi-lbl { font-size: 0.68rem; color: var(--muted); margin-top: 3px; font-weight: 700; }
+
+    /* Main Mode Tabs */
+    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    .tab-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+      padding: 9px 6px; border-radius: 11px; font-size: 0.77rem; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: var(--gold); color: #090d16; border-color: var(--gold-light);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+    }
+    .tab-badge {
+      background: rgba(0, 0, 0, 0.25); padding: 1px 6px; border-radius: 999px; font-size: 0.68rem; font-weight: 900;
+    }
+    .tab-btn:not(.active) .tab-badge { background: var(--surface-2); color: var(--gold-light); }
+
+    /* Filter & Search Bar */
+    .tools-row { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; margin-bottom: 12px; }
+    .search-input, .select-input {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: 9px 11px; border-radius: 10px; font-size: 0.8rem; outline: none; width: 100%;
+    }
+    .search-input:focus, .select-input:focus { border-color: var(--gold-light); }
+    .small-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: 0 11px; border-radius: 10px; font-size: 0.75rem; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap;
+    }
+    .small-btn:hover { border-color: var(--gold-light); color: var(--gold-light); }
+
+    /* Hot Picks Slider */
+    .hot-box {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(17, 24, 39, 0.95));
+      border: 1px solid rgba(251, 191, 36, 0.35); border-radius: 15px;
+      padding: 12px; margin-bottom: 14px; touch-action: pan-y;
+    }
+    .hot-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .hot-title { font-size: 0.78rem; font-weight: 900; color: var(--gold-light); display: flex; align-items: center; gap: 5px; }
+    .hot-nav { display: flex; gap: 5px; }
+    .hot-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.25); cursor: pointer; transition: all 0.2s; }
+    .hot-dot.active { width: 18px; border-radius: 6px; background: var(--gold-light); }
+
+    /* Match Cards */
+    .match-list { display: flex; flex-direction: column; gap: 10px; }
+    .match-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px; transition: border-color 0.2s;
+    }
+    .match-card:hover { border-color: rgba(251, 191, 36, 0.45); }
+    .match-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.71rem; color: var(--muted); margin-bottom: 8px; gap: 6px; flex-wrap: wrap; }
+    .div-pill { background: var(--surface-2); color: var(--gold-light); border: 1px solid rgba(251, 191, 36, 0.28); padding: 2px 7px; border-radius: 6px; font-weight: 900; font-size: 0.68rem; }
+    .tension-pill { padding: 2px 7px; border-radius: 6px; font-weight: 800; font-size: 0.68rem; }
+    .tension-high { background: rgba(239, 68, 68, 0.16); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); }
+    .tension-mid { background: rgba(245, 158, 11, 0.16); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .tension-low { background: rgba(56, 189, 248, 0.14); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+    .teams-row {
+      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+      margin-bottom: 10px; text-align: center;
+    }
+    .team-name { font-size: 0.9rem; font-weight: 800; color: #fff; word-break: break-word; }
+    .vs-box {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+      padding: 4px 10px; text-align: center;
+    }
+    .lambda-val { font-size: 0.96rem; font-weight: 900; color: var(--gold-light); display: block; }
+    .lambda-lbl { font-size: 0.6rem; color: var(--muted); display: block; }
+
+    .prob-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 9px; }
+    .prob-box { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 6px 4px; text-align: center; }
+    .prob-k { font-size: 0.65rem; color: var(--muted); display: block; }
+    .prob-v { font-size: 0.85rem; font-weight: 900; color: var(--text); }
+    .prob-v.hot { color: var(--emerald); }
+    .prob-v.warn { color: var(--gold-light); }
+
+    .card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--muted); border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; }
+    .sim-link-btn {
+      background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.45);
+      color: var(--gold-light); padding: 4px 10px; border-radius: 8px;
+      font-size: 0.72rem; font-weight: 800; cursor: pointer;
+    }
+
+    /* Simulator Panel */
+    .sim-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 15px; padding: 14px; }
+    .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .field-lbl { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+    .range-row { margin-bottom: 11px; }
+    .range-head { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; }
+    .range-val { color: var(--gold-light); font-weight: 900; }
+    input[type="range"] { width: 100%; accent-color: var(--gold); cursor: pointer; }
+
+    .sim-result {
+      background: linear-gradient(135deg, #0b1322, #141e33);
+      border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 13px; padding: 14px; margin-top: 12px;
+    }
+    .sim-big { text-align: center; margin-bottom: 12px; }
+    .sim-big-num { font-size: 2rem; font-weight: 900; color: var(--gold-light); }
+    .sim-sub { font-size: 0.76rem; color: var(--muted); }
+    .dist-bar-row { display: grid; grid-template-columns: 46px 1fr 44px; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.72rem; }
+    .dist-track { height: 8px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+    .dist-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--emerald)); border-radius: 99px; }
+
+    /* Empty / Loading */
+    .empty-state {
+      text-align: center; padding: 40px 18px; color: var(--muted);
+      background: var(--surface); border: 1px dashed var(--border); border-radius: 14px; font-size: 0.84rem;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: rgba(15, 23, 42, 0.96); color: #fff; border: 1px solid rgba(251, 191, 36, 0.45);
+      padding: 10px 18px; border-radius: 999px; font-size: 0.8rem; font-weight: 800;
+      z-index: 5000; opacity: 0; pointer-events: none; white-space: nowrap;
+      transition: opacity 0.2s ease, transform 0.2s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.65);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Gold Splash Screen */
+    .splash-overlay {
+      position: fixed; inset: 0; z-index: 9500;
+      background: radial-gradient(circle at center, #1e1b0f 0%, #070b12 72%);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .splash-overlay.active { display: flex; }
+    .splash-card {
+      width: 82px; height: 112px; border-radius: 12px;
+      background: linear-gradient(145deg, #fde047, #f59e0b, #b45309);
+      box-shadow: 0 0 40px rgba(245, 158, 11, 0.65);
+      animation: cardPop 2.4s ease forwards;
+      display: flex; align-items: center; justify-content: center;
+    }
+    @keyframes cardPop {
+      0% { transform: scale(0.7) rotate(-12deg); opacity: 0; }
+      35% { transform: scale(1.06) rotate(4deg); opacity: 1; }
+      80% { transform: scale(1) rotate(0deg); opacity: 1; }
+      100% { transform: scale(1.1); opacity: 0; }
+    }
+    .splash-name {
+      margin-top: 16px; font-size: 2rem; font-weight: 900; letter-spacing: 3px; direction: ltr;
+      background: linear-gradient(90deg, #fde047, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* Mandatory 15s Adsterra Overlay */
+    .ad-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; }
+    .ad-overlay.open { display: flex; }
+    .ad-close-btn {
+      position: absolute; top: 14px; right: 14px; z-index: 10000;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(15, 23, 42, 0.92); border: 2px solid var(--gold-light);
+      color: #fff; font-size: 1.15rem; font-weight: 900;
+      display: none; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .ad-iframe { width: 100%; height: 100%; border: none; background: #070b12; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Mandatory 15s Ad Overlay -->
+  <div class="ad-overlay" id="ad-overlay">
+    <button class="ad-close-btn" id="ad-close-btn" onclick="closeAd()">✕</button>
+    <iframe class="ad-iframe" id="ad-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+  </div>
+
+  <!-- Gold Splash Screen -->
+  <div class="splash-overlay" id="splash-overlay">
+    <div class="splash-card">
+      <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z"/>
+      </svg>
+    </div>
+    <div class="splash-name">BET CARD</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#111827">
+            <rect x="6" y="3" width="12" height="18" rx="2.5"/>
+          </svg>
+        </div>
+        <div class="brand-text">BET <span>CARD</span></div>
+      </div>
+
+      <div class="header-controls">
+        <div class="lang-switch">
+          <button class="flag-btn active" id="flag-fa" onclick="setLanguage('fa')" title="فارسی">
+            <svg class="flag-svg" viewBox="0 0 28 20">
+              <rect width="28" height="20" fill="#fff"/>
+              <rect width="28" height="6.66" y="0" fill="#239f40"/>
+              <rect width="28" height="6.66" y="13.34" fill="#da0000"/>
+              <circle cx="14" cy="10" r="2" fill="none" stroke="#da0000" stroke-width="1.1"/>
+            </svg>
+          </button>
+          <button class="flag-btn" id="flag-en" onclick="setLanguage('en')" title="English">
+            <svg class="flag-svg" viewBox="0 0 60 30">
+              <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="3"/>
+              <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/>
+              <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
+            </svg>
+          </button>
+        </div>
+
+        <button class="icon-btn" id="refreshBtn" onclick="resetAllData()" title="بروزرسانی داده‌ها">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-live"><span class="status-dot"></span><span id="statusText">در حال بارگذاری داده‌ها...</span></div>
+      <div id="lastSyncBadge"></div>
+    </div>
+
+    <div class="league-strip" id="leagueStrip">
+      <button class="league-btn active" data-code="ALL" onclick="selectLeague('ALL')">همه لیگ‌ها</button>
+      <button class="league-btn" data-code="E0" onclick="selectLeague('E0')">🇬🇧 E0</button>
+      <button class="league-btn" data-code="SP1" onclick="selectLeague('SP1')">🇪🇸 SP1</button>
+      <button class="league-btn" data-code="I1" onclick="selectLeague('I1')">🇮🇹 I1</button>
+      <button class="league-btn" data-code="D1" onclick="selectLeague('D1')">🇩🇪 D1</button>
+      <button class="league-btn" data-code="F1" onclick="selectLeague('F1')">🇫🇷 F1</button>
+      <button class="league-btn" data-code="P1" onclick="selectLeague('P1')">🇵🇹 P1</button>
+      <button class="league-btn" data-code="T1" onclick="selectLeague('T1')">🇹🇷 T1</button>
+      <button class="league-btn" data-code="G1" onclick="selectLeague('G1')">🇬🇷 G1</button>
+      <button class="league-btn" data-code="N1" onclick="selectLeague('N1')">🇳🇱 N1</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- KPI Row -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-val green" id="cntUpcoming">0</div>
+        <div class="kpi-lbl" data-i18n="kpiUpcoming">بازی‌های پیش‌رو</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val blue" id="cntPlayed">0</div>
+        <div class="kpi-lbl" data-i18n="kpiPlayed">بازی‌های تحلیل‌شده</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val" id="avgCards">0.00</div>
+        <div class="kpi-lbl" data-i18n="kpiAvg">میانگین کارت زرد</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-upcoming" onclick="switchViewMode('upcoming')">
+        <span data-i18n="tabUpcoming">پیش‌رو</span>
+        <span class="tab-badge" id="badgeUpcoming">0</span>
+      </button>
+      <button class="tab-btn" id="tab-played" onclick="switchViewMode('played')">
+        <span data-i18n="tabPlayed">انجام‌شده</span>
+        <span class="tab-badge" id="badgePlayed">0</span>
+      </button>
+      <button class="tab-btn" id="tab-simulator" onclick="switchViewMode('simulator')">
+        <span data-i18n="tabSim">شبیه‌ساز ۶ عاملی</span>
+      </button>
+    </div>
+
+    <!-- Matches View (Upcoming & Played) -->
+    <section id="matchesSection">
+      <!-- Hot Picks Swipeable Card -->
+      <div class="hot-box hidden" id="hotBox">
+        <div class="hot-head">
+          <div class="hot-title" id="hotHeaderTitle">🔥 پربرخوردترین بازی‌های پیش‌رو</div>
+          <div class="hot-nav" id="hotDots"></div>
+        </div>
+        <div id="hotContent"></div>
+      </div>
+
+      <!-- Search, Sort, CSV Export -->
+      <div class="tools-row">
+        <input type="text" id="searchInput" class="search-input" placeholder="جستجوی تیم یا داور..." oninput="sortAndRender()" />
+        <select id="sortSelect" class="select-input" style="width:auto" onchange="sortAndRender()">
+          <option value="date" data-i18n="sortDate">مرتب: تاریخ</option>
+          <option value="lambda" data-i18n="sortLambda">بیشترین کارت</option>
+          <option value="over45" data-i18n="sortOver45">احتمال Over 4.5</option>
+        </select>
+        <button class="small-btn" onclick="exportUpcomingCSV()" title="خروجی CSV">CSV ⬇</button>
+      </div>
+
+      <div class="match-list" id="tableBody">
+        <div class="empty-state">در حال دریافت اطلاعات از سرور...</div>
+      </div>
+    </section>
+
+    <!-- 6-Factor Poisson Simulator View -->
+    <section id="simulatorSection" class="hidden">
+      <div class="sim-panel">
+        <div class="sim-grid">
+          <div>
+            <label class="field-lbl" data-i18n="simHome">تیم میزبان</label>
+            <select id="simHome" class="select-input" onchange="runSimulator()"></select>
+          </div>
+          <div>
+            <label class="field-lbl" data-i18n="simAway">تیم میهمان</label>
+            <select id="simAway" class="select-input" onchange="runSimulator()"></select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px">
+          <label class="field-lbl" data-i18n="simRef">داور مسابقه</label>
+          <select id="simRef" class="select-input" onchange="runSimulator()"></select>
+        </div>
+
+        <div class="range-row">
+          <div class="range-head"><span data-i18n="f1">۱. حساسیت جدول و نزدیکی ضرایب</span><span class="range-val" id="valF1">1.00x</span></div>
+          <input type="range" id="f1" min="0.85" max="1.25" step="0.01" value="1.00" oninput="runSimulator()" />
+        </div>
+        <div class="range-row">
+          <div class="range-head"><span data-i18n="f2">۲. شدت دربی / رقابت تاریخی</span><span class="range-val" id="valF2">+0.00</span></div>
+          <input type="range" id="f2" min="0" max="1.6" step="0.1" value="0" oninput="runSimulator()" />
+        </div>
+        <div class="range-row">
+          <div class="range-head"><span data-i18n="f3">۳. ضریب سخت‌گیری داور</span><span class="range-val" id="valF3">1.00x</span></div>
+          <input type="range" id="f3" min="0.75" max="1.35" step="0.01" value="1.00" oninput="runSimulator()" />
+        </div>
+        <div class="range-row">
+          <div class="range-head"><span data-i18n="f4">۴. فشار استادیوم و جو میزبانی</span><span class="range-val" id="valF4">1.00x</span></div>
+          <input type="range" id="f4" min="0.90" max="1.20" step="0.01" value="1.00" oninput="runSimulator()" />
+        </div>
+        <div class="range-row">
+          <div class="range-head"><span data-i18n="f5">۵. نرخ خطای پیش‌بینی‌شده بازی</span><span class="range-val" id="valF5">1.00x</span></div>
+          <input type="range" id="f5" min="0.80" max="1.30" step="0.01" value="1.00" oninput="runSimulator()" />
+        </div>
+        <div class="range-row">
+          <div class="range-head"><span data-i18n="f6">۶. وزن‌دهی مدل پواسون (کالیبراسیون)</span><span class="range-val" id="valF6">1.00x</span></div>
+          <input type="range" id="f6" min="0.85" max="1.20" step="0.01" value="1.00" oninput="runSimulator()" />
+        </div>
+
+        <div class="sim-result" id="simOutput"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ================= CONFIG & SMART 3-LAYER BUNDLE LOADER =================
+    const ADSTERRA_URL = "https://asiafilm.org/4/052064ca4ffd0916d363a8d4ca962a64";
     const CACHE_KEY = 'betcard_bundle_cache_v1';
     const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
-    const MANUAL_COOLDOWN_MS = 60 * 1000;    // 1 minute
+    const MANUAL_COOLDOWN_MS = 10 * 1000;    // 10s manual cooldown
 
     const DATA_MIRRORS = [
       { name: 'jsDelivr CDN', url: 'https://cdn.jsdelivr.net/gh/frankalayari-beep/card_app@main/data/bundle.json', local: false },
@@ -10,10 +469,185 @@
       { name: 'Offline Pack', url: './data/bundle.json', local: true }
     ];
 
+    const ALL_LEAGUES = ['E0', 'SP1', 'I1', 'D1', 'F1', 'P1', 'T1', 'G1', 'N1'];
+    const LEAGUE_NAMES = {
+      E0: 'Premier League', SP1: 'La Liga', I1: 'Serie A', D1: 'Bundesliga',
+      F1: 'Ligue 1', P1: 'Liga Portugal', T1: 'Süper Lig', G1: 'Super League GR', N1: 'Eredivisie'
+    };
+
     let memBundle = null;
     let memSource = '';
     let lastNetworkFetch = 0;
 
+    let currentLang = localStorage.getItem('betcard_lang') || 'fa';
+    let currentLeague = 'ALL';
+    let currentMode = 'upcoming';
+    let adOpen = false;
+    let splashOpen = false;
+    let isFirstStartupAd = true;
+    let lastBackPressTime = 0;
+
+    let hotList = [];
+    let hotIdx = 0;
+    let touchX0 = 0;
+
+    let db = {
+      playedList: [],
+      upcomingList: [],
+      teamStats: {},
+      refStats: {},
+      leagueAvg: 4.15
+    };
+
+    const I18N = {
+      fa: {
+        dir: 'rtl',
+        allLeagues: 'همه لیگ‌ها',
+        kpiUpcoming: 'بازی‌های پیش‌رو',
+        kpiPlayed: 'بازی‌های تحلیل‌شده',
+        kpiAvg: 'میانگین کارت زرد',
+        tabUpcoming: 'پیش‌رو',
+        tabPlayed: 'انجام‌شده',
+        tabSim: 'شبیه‌ساز ۶ عاملی',
+        searchPh: 'جستجوی تیم یا داور...',
+        sortDate: 'مرتب: تاریخ',
+        sortLambda: 'بیشترین کارت',
+        sortOver45: 'احتمال Over 4.5',
+        hotHeader: '🔥 پربرخوردترین بازی‌های پیش‌رو',
+        expCards: 'پیش‌بینی کارت',
+        actualCards: 'کارت ثبت‌شده',
+        referee: 'داور',
+        openSim: 'تحلیل در شبیه‌ساز',
+        noUpcoming: 'بازی پیش‌رویی برای این فیلتر یافت نشد. دکمه بروزرسانی بالا را بزنید.',
+        noPlayed: 'بازی انجام‌شده‌ای با این فیلتر یافت نشد.',
+        simHome: 'تیم میزبان',
+        simAway: 'تیم میهمان',
+        simRef: 'داور مسابقه',
+        f1: '۱. حساسیت جدول و نزدیکی ضرایب',
+        f2: '۲. شدت دربی / رقابت تاریخی',
+        f3: '۳. ضریب سخت‌گیری داور',
+        f4: '۴. فشار استادیوم و جو میزبانی',
+        f5: '۵. نرخ خطای پیش‌بینی‌شده بازی',
+        f6: '۶. وزن‌دهی مدل پواسون (کالیبراسیون)',
+        simTitle: 'میانگین کارت زرد مورد انتظار (λ)',
+        tensionHigh: 'حساس و نزدیک',
+        tensionMid: 'متعادل',
+        tensionLow: 'اختلاف سطح',
+        refDefault: 'میانگین لیگ',
+        exitToast: 'برای خروج، یک‌بار دیگر دکمه بازگشت را بزنید',
+        refreshedToast: 'داده‌ها با موفقیت بروزرسانی شد',
+        exportedToast: 'فایل پیش‌بینی CSV ذخیره شد',
+        loading: 'در حال بارگذاری...'
+      },
+      en: {
+        dir: 'ltr',
+        allLeagues: 'All Leagues',
+        kpiUpcoming: 'Upcoming Matches',
+        kpiPlayed: 'Analyzed Matches',
+        kpiAvg: 'Avg Yellow Cards',
+        tabUpcoming: 'Upcoming',
+        tabPlayed: 'Played',
+        tabSim: '6-Factor Sim',
+        searchPh: 'Search team or referee...',
+        sortDate: 'Sort: Date',
+        sortLambda: 'Highest Exp. Cards',
+        sortOver45: 'Over 4.5 Prob.',
+        hotHeader: '🔥 Top High-Card Upcoming Picks',
+        expCards: 'Exp. Cards',
+        actualCards: 'Actual Cards',
+        referee: 'Ref',
+        openSim: 'Open in Sim',
+        noUpcoming: 'No upcoming matches found for this filter. Tap refresh above.',
+        noPlayed: 'No played matches match your filter.',
+        simHome: 'Home Team',
+        simAway: 'Away Team',
+        simRef: 'Match Referee',
+        f1: '1. Odds Tension / Match Closeness',
+        f2: '2. Derby / Rivalry Intensity',
+        f3: '3. Referee Strictness Multiplier',
+        f4: '4. Home Crowd Pressure',
+        f5: '5. Expected Foul Tempo',
+        f6: '6. Poisson Calibration Factor',
+        simTitle: 'Expected Total Yellow Cards (λ)',
+        tensionHigh: 'High Tension',
+        tensionMid: 'Balanced',
+        tensionLow: 'Clear Favorite',
+        refDefault: 'League Avg',
+        exitToast: 'Press back again to exit BET CARD',
+        refreshedToast: 'Football data updated!',
+        exportedToast: 'CSV predictions exported!',
+        loading: 'Loading analytics...'
+      }
+    };
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(window._tTimer);
+      window._tTimer = setTimeout(() => el.classList.remove('show'), 2400);
+    }
+
+    // ================= AD & SPLASH =================
+    function triggerMandatoryAd() {
+      if (!ADSTERRA_URL) return;
+      adOpen = true;
+      const overlay = document.getElementById('ad-overlay');
+      const closeBtn = document.getElementById('ad-close-btn');
+      closeBtn.style.display = 'none';
+      document.getElementById('ad-iframe').src = ADSTERRA_URL;
+      overlay.classList.add('open');
+      setTimeout(() => { closeBtn.style.display = 'flex'; }, 15000);
+    }
+
+    function closeAd() {
+      adOpen = false;
+      document.getElementById('ad-overlay').classList.remove('open');
+      document.getElementById('ad-iframe').src = 'about:blank';
+      if (isFirstStartupAd) {
+        isFirstStartupAd = false;
+        playSplash();
+      }
+    }
+
+    function playSplash() {
+      splashOpen = true;
+      const s = document.getElementById('splash-overlay');
+      s.classList.add('active');
+      setTimeout(() => {
+        s.classList.remove('active');
+        splashOpen = false;
+      }, 2400);
+    }
+
+    setInterval(() => {
+      if (!adOpen && !splashOpen) triggerMandatoryAd();
+    }, 30 * 60 * 1000);
+
+    // ================= LANGUAGE =================
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('betcard_lang', lang);
+      const t = I18N[lang];
+      document.documentElement.lang = lang;
+      document.documentElement.dir = t.dir;
+      document.getElementById('flag-fa').classList.toggle('active', lang === 'fa');
+      document.getElementById('flag-en').classList.toggle('active', lang === 'en');
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+      });
+      const allBtn = document.querySelector('.league-btn[data-code="ALL"]');
+      if (allBtn) allBtn.textContent = t.allLeagues;
+      document.getElementById('searchInput').placeholder = t.searchPh;
+      document.getElementById('hotHeaderTitle').textContent = t.hotHeader;
+
+      sortAndRender();
+      if (currentMode === 'simulator') runSimulator();
+    }
+
+    // ================= CACHE & MIRRORS =================
     function getCacheBucket() {
       return Math.floor(Date.now() / CACHE_TTL_MS);
     }
@@ -62,10 +696,14 @@
         return { data: memBundle, source: memSource };
       }
 
+      const mirrors = forceRefresh
+        ? [DATA_MIRRORS[1], DATA_MIRRORS[2], DATA_MIRRORS[0], DATA_MIRRORS[3]]
+        : DATA_MIRRORS;
+
       const bucket = forceRefresh ? Date.now() : getCacheBucket();
-      for (const mirror of DATA_MIRRORS) {
+      for (const mirror of mirrors) {
         const url = mirror.local ? mirror.url : `${mirror.url}?v=${bucket}`;
-        const res = await fetchWithTimeout(url, mirror.local ? 3000 : 7000);
+        const res = await fetchWithTimeout(url, mirror.local ? 3000 : 7500);
         if (!res || res.status === 429 || res.status === 403) continue;
         if (res.ok) {
           try {
@@ -89,6 +727,47 @@
       return null;
     }
 
+    // ================= MATH & POISSON MODEL =================
+    function computeOddsTension(oh, oa) {
+      const h = parseFloat(oh), a = parseFloat(oa);
+      if (!isNaN(h) && !isNaN(a) && h > 1 && a > 1) {
+        const diff = Math.abs((1 / h) - (1 / a));
+        if (diff <= 0.14) return { close: 1.09, closeLbl: 'high' };
+        if (diff <= 0.32) return { close: 1.00, closeLbl: 'mid' };
+        return { close: 0.93, closeLbl: 'low' };
+      }
+      return { close: 1.00, closeLbl: 'mid' };
+    }
+
+    function parseDateToTs(dStr) {
+      if (!dStr) return 0;
+      const parts = String(dStr).trim().split(/[\/\-]/);
+      if (parts.length === 3) {
+        let d, m, y;
+        if (parts[0].length === 4) {
+          y = +parts[0]; m = +parts[1]; d = +parts[2];
+        } else {
+          d = +parts[0]; m = +parts[1]; y = +parts[2];
+          if (y < 100) y += 2000;
+        }
+        return new Date(y, m - 1, d).getTime() || 0;
+      }
+      return Date.parse(dStr) || 0;
+    }
+
+    function poissonPMF(k, lambda) {
+      if (lambda <= 0) return k === 0 ? 1 : 0;
+      let fact = 1;
+      for (let i = 2; i <= k; i++) fact *= i;
+      return (Math.exp(-lambda) * Math.pow(lambda, k)) / fact;
+    }
+
+    function poissonOver(thresholdInt, lambda) {
+      let cdf = 0;
+      for (let k = 0; k <= thresholdInt; k++) cdf += poissonPMF(k, lambda);
+      return Math.max(0, Math.min(1, 1 - cdf));
+    }
+
     function convertBundleToMatches(bundle, codes) {
       const out = [];
       let idx = 0;
@@ -101,13 +780,14 @@
             idx: idx++,
             div: code,
             date: r[0] || '',
+            ts: parseDateToTs(r[0]),
             h: r[1],
             a: r[2],
-            rf: r[3] || 'League Avg',
-            hf: r[4] != null ? r[4] : NaN,
-            af: r[5] != null ? r[5] : NaN,
-            hy: r[6] != null ? r[6] : NaN,
-            ay: r[7] != null ? r[7] : NaN,
+            rf: r[3] || '',
+            hf: r[4] != null ? Number(r[4]) : NaN,
+            af: r[5] != null ? Number(r[5]) : NaN,
+            hy: r[6] != null ? Number(r[6]) : NaN,
+            ay: r[7] != null ? Number(r[7]) : NaN,
             close: t.close,
             closeLbl: t.closeLbl
           });
@@ -121,9 +801,10 @@
           idx: idx++,
           div: r[0],
           date: r[1] || '',
+          ts: parseDateToTs(r[1]),
           h: r[2],
           a: r[3],
-          rf: r[4] || 'League Avg',
+          rf: r[4] || '',
           hf: NaN,
           af: NaN,
           hy: NaN,
@@ -136,31 +817,427 @@
       return out;
     }
 
+    function buildFromMatches(matches, sourceLabel) {
+      const played = [];
+      const upcoming = [];
+      const teamStats = {};
+      const refStats = {};
+      let sumY = 0, cntY = 0;
+
+      const ensureTeam = (name) => {
+        if (!teamStats[name]) {
+          teamStats[name] = { hY: 0, hOppY: 0, hG: 0, aY: 0, aOppY: 0, aG: 0, hF: 0, aF: 0 };
+        }
+        return teamStats[name];
+      };
+
+      matches.forEach(m => {
+        if (!m.h || !m.a) return;
+        if (!isNaN(m.hy) && !isNaN(m.ay)) {
+          const tot = m.hy + m.ay;
+          sumY += tot; cntY++;
+          const th = ensureTeam(m.h);
+          const ta = ensureTeam(m.a);
+          th.hY += m.hy; th.hOppY += m.ay; th.hG++;
+          ta.aY += m.ay; ta.aOppY += m.hy; ta.aG++;
+          if (!isNaN(m.hf)) th.hF += m.hf;
+          if (!isNaN(m.af)) ta.aF += m.af;
+
+          if (m.rf && m.rf !== 'League Avg') {
+            if (!refStats[m.rf]) refStats[m.rf] = { y: 0, g: 0 };
+            refStats[m.rf].y += tot;
+            refStats[m.rf].g++;
+          }
+          played.push({ ...m, y: tot });
+        } else {
+          upcoming.push({ ...m, y: null });
+        }
+      });
+
+      const leagueAvg = cntY > 0 ? sumY / cntY : 4.15;
+
+      const predictLambda = (hName, aName, refName, tensionFactor = 1.0) => {
+        const halfBase = leagueAvg / 2;
+        const th = teamStats[hName];
+        const ta = teamStats[aName];
+
+        const homeOwn = th && th.hG > 0 ? (th.hY + 2 * halfBase) / (th.hG + 2) : halfBase;
+        const homeInd = th && th.hG > 0 ? (th.hOppY + 2 * halfBase) / (th.hG + 2) : halfBase;
+        const awayOwn = ta && ta.aG > 0 ? (ta.aY + 2 * halfBase) / (ta.aG + 2) : halfBase;
+        const awayInd = ta && ta.aG > 0 ? (ta.aOppY + 2 * halfBase) / (ta.aG + 2) : halfBase;
+
+        const expHome = (homeOwn * 0.6 + awayInd * 0.4);
+        const expAway = (awayOwn * 0.6 + homeInd * 0.4);
+        let baseTotal = expHome + expAway;
+
+        let refMult = 1.0;
+        if (refName && refStats[refName] && refStats[refName].g > 0) {
+          const rs = refStats[refName];
+          const shrunkRef = (rs.y + 4 * leagueAvg) / (rs.g + 4);
+          refMult = shrunkRef / leagueAvg;
+        }
+
+        const lam = Math.max(1.8, Math.min(8.5, baseTotal * refMult * tensionFactor));
+        return {
+          lambda: lam,
+          o35: poissonOver(3, lam) * 100,
+          o45: poissonOver(4, lam) * 100,
+          o55: poissonOver(5, lam) * 100
+        };
+      };
+
+      const enrichedUpcoming = upcoming.map(m => ({ ...m, ...predictLambda(m.h, m.a, m.rf, m.close) }));
+      const enrichedPlayed = played.map(m => ({ ...m, ...predictLambda(m.h, m.a, m.rf, m.close) }));
+
+      db = {
+        playedList: enrichedPlayed,
+        upcomingList: enrichedUpcoming,
+        teamStats,
+        refStats,
+        leagueAvg
+      };
+
+      document.getElementById('statusText').textContent = sourceLabel;
+      document.getElementById('cntUpcoming').textContent = enrichedUpcoming.length;
+      document.getElementById('cntPlayed').textContent = enrichedPlayed.length;
+      document.getElementById('badgeUpcoming').textContent = enrichedUpcoming.length;
+      document.getElementById('badgePlayed').textContent = enrichedPlayed.length;
+      document.getElementById('avgCards').textContent = leagueAvg.toFixed(2);
+
+      populateSimulatorDropdowns();
+      renderHotSlider();
+      sortAndRender();
+    }
+
     async function fetchRepoLeague(code, forceRefresh = false) {
-      const st = document.getElementById('statusText');
-      if (st) st.innerText = `Loading ${code} analytics...`;
+      const t = I18N[currentLang];
+      document.getElementById('statusText').textContent = t.loading;
+      const btn = document.getElementById('refreshBtn');
+      if (forceRefresh && btn) btn.classList.add('spinning');
 
       const result = await loadSmartBundle(forceRefresh);
+      if (btn) btn.classList.remove('spinning');
+
       if (result && result.data) {
         const badge = document.getElementById('lastSyncBadge');
         if (badge && result.data.updated_at) {
-          badge.innerText = `| Updated: ${result.data.updated_at}`;
+          const shortDate = result.data.updated_at.replace('T', ' ').replace('Z', ' UTC');
+          badge.textContent = shortDate;
         }
-
-        const allLeagueCodes = Object.keys(result.data.leagues || {});
-        const codes = code === 'ALL'
-          ? (allLeagueCodes.length ? allLeagueCodes : ['SP1', 'E0', 'I1', 'D1', 'F1', 'P1', 'T1', 'G1', 'N1'])
-          : [code];
-
+        const availCodes = Object.keys(result.data.leagues || {});
+        const codes = code === 'ALL' ? (availCodes.length ? availCodes : ALL_LEAGUES) : [code];
         const matches = convertBundleToMatches(result.data, codes);
-        if (matches.length > 0) {
-          buildFromMatches(matches, `${result.source} (${code})`);
-          return;
-        }
+        buildFromMatches(matches, `${result.source} (${code})`);
+        if (forceRefresh) showToast(t.refreshedToast);
+        return;
       }
 
-      if (typeof FALLBACK_CSV !== 'undefined' && typeof extractMatchesFromCSV === 'function') {
-        const fallbackMatches = extractMatchesFromCSV(FALLBACK_CSV);
-        buildFromMatches(fallbackMatches, `Offline Demo (${code})`);
-      }
+      document.getElementById('statusText').textContent = 'Offline / Error';
+      document.getElementById('tableBody').innerHTML = `<div class="empty-state">${t.noUpcoming}</div>`;
     }
+
+    function selectLeague(code) {
+      currentLeague = code;
+      document.querySelectorAll('.league-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-code') === code);
+      });
+      fetchRepoLeague(code, false);
+    }
+
+    function resetAllData() {
+      localStorage.removeItem(CACHE_KEY);
+      memBundle = null;
+      lastNetworkFetch = 0;
+      fetchRepoLeague(currentLeague, true);
+    }
+
+    // ================= UI RENDERING =================
+    function switchViewMode(mode) {
+      currentMode = mode;
+      ['upcoming', 'played', 'simulator'].forEach(m => {
+        document.getElementById(`tab-${m}`).classList.toggle('active', m === mode);
+      });
+      document.getElementById('matchesSection').classList.toggle('hidden', mode === 'simulator');
+      document.getElementById('simulatorSection').classList.toggle('hidden', mode !== 'simulator');
+
+      if (mode === 'simulator') runSimulator();
+      else sortAndRender();
+    }
+
+    function renderHotSlider() {
+      const box = document.getElementById('hotBox');
+      if (!db.upcomingList.length || currentMode !== 'upcoming') {
+        box.classList.add('hidden');
+        return;
+      }
+      hotList = [...db.upcomingList].sort((a, b) => b.lambda - a.lambda).slice(0, 5);
+      if (hotIdx >= hotList.length) hotIdx = 0;
+      box.classList.remove('hidden');
+
+      const dots = hotList.map((_, i) => `<span class="hot-dot ${i === hotIdx ? 'active' : ''}" onclick="setHotIdx(${i})"></span>`).join('');
+      document.getElementById('hotDots').innerHTML = dots;
+      document.getElementById('hotContent').innerHTML = buildMatchCardHTML(hotList[hotIdx], true);
+    }
+
+    function setHotIdx(i) {
+      hotIdx = i;
+      renderHotSlider();
+    }
+
+    function tensionBadgeHTML(lbl) {
+      const t = I18N[currentLang];
+      if (lbl === 'high') return `<span class="tension-pill tension-high">${t.tensionHigh}</span>`;
+      if (lbl === 'low') return `<span class="tension-pill tension-low">${t.tensionLow}</span>`;
+      return `<span class="tension-pill tension-mid">${t.tensionMid}</span>`;
+    }
+
+    function buildMatchCardHTML(m, isCompact = false) {
+      const t = I18N[currentLang];
+      const isPlayed = m.y !== null;
+      const refText = m.rf || t.refDefault;
+      const safeH = m.h.replace(/'/g, "\\'");
+      const safeA = m.a.replace(/'/g, "\\'");
+      const safeR = (m.rf || '').replace(/'/g, "\\'");
+
+      return `
+        <div class="match-card" style="${isCompact ? 'background:rgba(7,11,18,0.65);margin:0' : ''}">
+          <div class="match-meta">
+            <div><span class="div-pill">${m.div}</span> <span>${m.date}</span></div>
+            ${tensionBadgeHTML(m.closeLbl)}
+          </div>
+          <div class="teams-row">
+            <div class="team-name">${m.h}</div>
+            <div class="vs-box">
+              <span class="lambda-val">${isPlayed ? m.y : m.lambda.toFixed(2)}</span>
+              <span class="lambda-lbl">${isPlayed ? t.actualCards : t.expCards}</span>
+            </div>
+            <div class="team-name">${m.a}</div>
+          </div>
+          <div class="prob-grid">
+            <div class="prob-box">
+              <span class="prob-k">Over 3.5</span>
+              <span class="prob-v ${m.o35 >= 68 ? 'hot' : ''}">${m.o35.toFixed(0)}%</span>
+            </div>
+            <div class="prob-box">
+              <span class="prob-k">Over 4.5</span>
+              <span class="prob-v ${m.o45 >= 52 ? 'hot' : m.o45 >= 42 ? 'warn' : ''}">${m.o45.toFixed(0)}%</span>
+            </div>
+            <div class="prob-box">
+              <span class="prob-k">Over 5.5</span>
+              <span class="prob-v ${m.o55 >= 35 ? 'warn' : ''}">${m.o55.toFixed(0)}%</span>
+            </div>
+          </div>
+          <div class="card-foot">
+            <span>${t.referee}: <strong>${refText}</strong> ${isPlayed ? `| λ: ${m.lambda.toFixed(2)}` : ''}</span>
+            <button class="sim-link-btn" onclick="openMatchInSim('${safeH}','${safeA}','${safeR}',${m.close})">${t.openSim}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function sortAndRender() {
+      const t = I18N[currentLang];
+      const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      const sortBy = document.getElementById('sortSelect').value;
+
+      const source = currentMode === 'upcoming' ? db.upcomingList : db.playedList;
+      let list = source.filter(m =>
+        !q ||
+        m.h.toLowerCase().includes(q) ||
+        m.a.toLowerCase().includes(q) ||
+        (m.rf || '').toLowerCase().includes(q) ||
+        m.div.toLowerCase().includes(q)
+      );
+
+      if (sortBy === 'lambda') list.sort((a, b) => b.lambda - a.lambda);
+      else if (sortBy === 'over45') list.sort((a, b) => b.o45 - a.o45);
+      else {
+        list.sort((a, b) => currentMode === 'upcoming' ? (a.ts - b.ts) : (b.ts - a.ts));
+      }
+
+      renderHotSlider();
+
+      const body = document.getElementById('tableBody');
+      if (!list.length) {
+        body.innerHTML = `<div class="empty-state">${currentMode === 'upcoming' ? t.noUpcoming : t.noPlayed}</div>`;
+        return;
+      }
+
+      const cap = currentMode === 'played' ? list.slice(0, 120) : list;
+      body.innerHTML = cap.map(m => buildMatchCardHTML(m, false)).join('');
+    }
+
+    // ================= 6-FACTOR SIMULATOR =================
+    function populateSimulatorDropdowns() {
+      const teams = Object.keys(db.teamStats).sort();
+      const refs = Object.keys(db.refStats).sort();
+      const t = I18N[currentLang];
+
+      const hSel = document.getElementById('simHome');
+      const aSel = document.getElementById('simAway');
+      const rSel = document.getElementById('simRef');
+
+      const prevH = hSel.value, prevA = aSel.value, prevR = rSel.value;
+
+      hSel.innerHTML = teams.map(tm => `<option value="${tm}">${tm}</option>`).join('');
+      aSel.innerHTML = teams.map(tm => `<option value="${tm}">${tm}</option>`).join('');
+      rSel.innerHTML = `<option value="">${t.refDefault} (${db.leagueAvg.toFixed(2)})</option>` +
+        refs.map(rf => `<option value="${rf}">${rf} (${(db.refStats[rf].y / db.refStats[rf].g).toFixed(2)})</option>`).join('');
+
+      if (prevH && teams.includes(prevH)) hSel.value = prevH;
+      if (prevA && teams.includes(prevA)) aSel.value = prevA;
+      else if (teams.length > 1) aSel.selectedIndex = 1;
+      if (prevR && refs.includes(prevR)) rSel.value = prevR;
+    }
+
+    function openMatchInSim(h, a, ref, closeVal) {
+      populateSimulatorDropdowns();
+      const hSel = document.getElementById('simHome');
+      const aSel = document.getElementById('simAway');
+      const rSel = document.getElementById('simRef');
+
+      const ensureOpt = (sel, val) => {
+        if (!val) return;
+        if (![...sel.options].some(o => o.value === val)) {
+          const opt = document.createElement('option');
+          opt.value = val; opt.textContent = val;
+          sel.appendChild(opt);
+        }
+        sel.value = val;
+      };
+
+      ensureOpt(hSel, h);
+      ensureOpt(aSel, a);
+      if (ref) ensureOpt(rSel, ref);
+      else rSel.value = '';
+
+      document.getElementById('f1').value = Number(closeVal || 1.0).toFixed(2);
+      switchViewMode('simulator');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function runSimulator() {
+      const t = I18N[currentLang];
+      const h = document.getElementById('simHome').value;
+      const a = document.getElementById('simAway').value;
+      const ref = document.getElementById('simRef').value;
+
+      const f1 = parseFloat(document.getElementById('f1').value);
+      const f2 = parseFloat(document.getElementById('f2').value);
+      const f3 = parseFloat(document.getElementById('f3').value);
+      const f4 = parseFloat(document.getElementById('f4').value);
+      const f5 = parseFloat(document.getElementById('f5').value);
+      const f6 = parseFloat(document.getElementById('f6').value);
+
+      document.getElementById('valF1').textContent = `${f1.toFixed(2)}x`;
+      document.getElementById('valF2').textContent = `+${f2.toFixed(1)}`;
+      document.getElementById('valF3').textContent = `${f3.toFixed(2)}x`;
+      document.getElementById('valF4').textContent = `${f4.toFixed(2)}x`;
+      document.getElementById('valF5').textContent = `${f5.toFixed(2)}x`;
+      document.getElementById('valF6').textContent = `${f6.toFixed(2)}x`;
+
+      const halfBase = db.leagueAvg / 2;
+      const th = db.teamStats[h];
+      const ta = db.teamStats[a];
+      const homeOwn = th && th.hG > 0 ? (th.hY + 2 * halfBase) / (th.hG + 2) : halfBase;
+      const homeInd = th && th.hG > 0 ? (th.hOppY + 2 * halfBase) / (th.hG + 2) : halfBase;
+      const awayOwn = ta && ta.aG > 0 ? (ta.aY + 2 * halfBase) / (ta.aG + 2) : halfBase;
+      const awayInd = ta && ta.aG > 0 ? (ta.aOppY + 2 * halfBase) / (ta.aG + 2) : halfBase;
+
+      let base = (homeOwn * 0.6 + awayInd * 0.4) + (awayOwn * 0.6 + homeInd * 0.4);
+      let refBase = 1.0;
+      if (ref && db.refStats[ref] && db.refStats[ref].g > 0) {
+        const rs = db.refStats[ref];
+        refBase = ((rs.y + 4 * db.leagueAvg) / (rs.g + 4)) / db.leagueAvg;
+      }
+
+      const lambda = Math.max(1.2, Math.min(9.5, (base * refBase * f1 * f3 * f4 * f5 * f6) + f2));
+
+      const o25 = (poissonOver(2, lambda) * 100).toFixed(1);
+      const o35 = (poissonOver(3, lambda) * 100).toFixed(1);
+      const o45 = (poissonOver(4, lambda) * 100).toFixed(1);
+      const o55 = (poissonOver(5, lambda) * 100).toFixed(1);
+      const o65 = (poissonOver(6, lambda) * 100).toFixed(1);
+
+      let bars = '';
+      for (let k = 1; k <= 8; k++) {
+        const p = (k === 8 ? poissonOver(7, lambda) : poissonPMF(k, lambda)) * 100;
+        const lbl = k === 8 ? '8+' : `${k}`;
+        bars += `
+          <div class="dist-bar-row">
+            <span>${lbl} 🟨</span>
+            <div class="dist-track"><div class="dist-fill" style="width:${Math.min(100, p * 3.2).toFixed(1)}%"></div></div>
+            <span style="text-align:end;font-weight:800">${p.toFixed(1)}%</span>
+          </div>
+        `;
+      }
+
+      document.getElementById('simOutput').innerHTML = `
+        <div class="sim-big">
+          <div class="sim-sub">${t.simTitle}</div>
+          <div class="sim-big-num">${lambda.toFixed(2)}</div>
+          <div class="sim-sub">${h || '-'} vs ${a || '-'}</div>
+        </div>
+        <div class="prob-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
+          <div class="prob-box"><span class="prob-k">O 2.5</span><span class="prob-v">${o25}%</span></div>
+          <div class="prob-box"><span class="prob-k">O 3.5</span><span class="prob-v hot">${o35}%</span></div>
+          <div class="prob-box"><span class="prob-k">O 4.5</span><span class="prob-v warn">${o45}%</span></div>
+          <div class="prob-box"><span class="prob-k">O 5.5</span><span class="prob-v">${o55}%</span></div>
+          <div class="prob-box"><span class="prob-k">O 6.5</span><span class="prob-v">${o65}%</span></div>
+        </div>
+        ${bars}
+      `;
+    }
+
+    function exportUpcomingCSV() {
+      if (!db.upcomingList.length) return;
+      const rows = [['League', 'Date', 'Home', 'Away', 'Referee', 'ExpCards', 'Over3.5%', 'Over4.5%', 'Over5.5%']];
+      db.upcomingList.forEach(m => {
+        rows.push([m.div, m.date, m.h, m.a, m.rf || '', m.lambda.toFixed(2), m.o35.toFixed(1), m.o45.toFixed(1), m.o55.toFixed(1)]);
+      });
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `BETCARD_${currentLeague}_upcoming.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(I18N[currentLang].exportedToast);
+    }
+
+    // Touch Swipe for Hot Picks Slider
+    const hotBoxEl = document.getElementById('hotBox');
+    hotBoxEl.addEventListener('touchstart', e => { touchX0 = e.changedTouches[0].screenX; }, { passive: true });
+    hotBoxEl.addEventListener('touchend', e => {
+      if (hotList.length <= 1) return;
+      const dx = e.changedTouches[0].screenX - touchX0;
+      if (Math.abs(dx) > 36) {
+        hotIdx = dx < 0 ? (hotIdx + 1) % hotList.length : (hotIdx - 1 + hotList.length) % hotList.length;
+        renderHotSlider();
+      }
+    }, { passive: true });
+
+    // Android Two-Step Back Handler
+    window.handleAndroidBack = function() {
+      if (adOpen || splashOpen) return "BLOCKED";
+      if (currentMode !== 'upcoming') {
+        switchViewMode('upcoming');
+        return "HANDLED";
+      }
+      const now = Date.now();
+      if (now - lastBackPressTime < 2400) return "EXIT";
+      lastBackPressTime = now;
+      showToast(I18N[currentLang].exitToast);
+      return "HANDLED";
+    };
+
+    // Init
+    window.onload = function() {
+      setLanguage(currentLang);
+      triggerMandatoryAd();
+      fetchRepoLeague('ALL', false);
+    };
+  </script>
+</body>
+</html>
