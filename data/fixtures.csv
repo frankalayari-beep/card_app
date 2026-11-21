@@ -1,6 +1,5 @@
 Div,Date,HomeTeam,AwayTeam,Referee,B365H,B365A
 D1,20/11/2026,Bayern Munich,FC Koln,,1.08,19.0
-D1,20/11/2026,Bayern Munich,Cologne,,0,0
 F1,20/11/2026,Troyes,Le Havre,,2.2,3.2
 SP1,20/11/2026,Ath Bilbao,Espanol,,1.5,6.5
 D1,21/11/2026,Ein Frankfurt,Hoffenheim,,2.3,2.7
@@ -170,3 +169,10 @@ E0,02/12/2026,Newcastle,Man United,,0,0
 SP1,02/12/2026,Barcelona,Ath Madrid,,0,0
 SP1,02/12/2026,Sociedad,Real Madrid,,0,0
 E0,03/12/2026,Tottenham,Fulham,,0,0
+D1,04/12/2026,Bayern Munich,Paderborn,,0,0
+F1,04/12/2026,Toulouse,Paris SG,,0,0
+I1,04/12/2026,Bologna,Roma,,0,0
+N1,04/12/2026,Telstar,Groningen,,0,0
+P1,04/12/2026,Sp Lisbon,Maritimo,,0,0
+SP1,04/12/2026,Alaves,Espanol,,0,0
+T1,04/12/2026,Galatasaray,Rizespor,,0,0
